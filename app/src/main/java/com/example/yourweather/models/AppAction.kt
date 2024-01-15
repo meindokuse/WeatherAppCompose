@@ -1,12 +1,18 @@
 package com.example.yourweather.models
 
 sealed class AppAction{
-    object RequestWeatherUpdate:AppAction()
-    object RequestLocationUpdate:AppAction()
-    object StartLoading : AppAction()
-    object StopLoading : AppAction()
-    data class WeatherUpdateSuccess(
-        val weatherForecast: WeatherForecast):AppAction()
-
+    object FirstEnter:AppAction()
+    object UpdateData:AppAction()
+    object UpdateLocation:AppAction()
+    object UpdateAll:AppAction()
+    data class AddLocation(
+        val newLocation:String
+    ):AppAction()
+    data class DeleteLocation(
+        val currentLocation:String
+    ):AppAction()
 
 }
+
+
+

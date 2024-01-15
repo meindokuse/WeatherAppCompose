@@ -5,9 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.yourweather.models.Current
 import com.example.yourweather.models.Forecast
-import com.example.yourweather.models.Location
 import com.example.yourweather.models.WeatherForecast
 
 
@@ -15,15 +13,11 @@ import com.example.yourweather.models.WeatherForecast
 interface WeatherDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertWeatherForecast(weatherForecast: WeatherForecast)
+    suspend fun insertWeatherForecast(vararg weatherForecast: WeatherForecast)
 
     @Query("SELECT * FROM last_weather")
-    suspend fun getWeatherForecasts():WeatherForecast
+    suspend fun getWeatherForecasts():WeatherForecast?
 
-    @Update
-    suspend fun updateWeatherForecast(
-        location: Location,
-        current: Current,
-        forecast: Forecast
-    )
+    @Update(entity = WeatherForecast::class,onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateWeatherForecast(weatherForecast: WeatherForecast)
 }

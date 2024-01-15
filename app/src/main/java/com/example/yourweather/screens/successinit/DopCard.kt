@@ -1,4 +1,4 @@
-package com.example.yourweather.screens
+package com.example.yourweather.screens.successinit
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

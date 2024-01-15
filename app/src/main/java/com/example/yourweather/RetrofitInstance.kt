@@ -6,6 +6,7 @@ import com.example.yourweather.RetrofitInstance.API
 import com.example.yourweather.models.Current
 import com.example.yourweather.models.ForecastDay
 import com.example.yourweather.models.WeatherForecast
+import com.example.yourweather.models.WeatherScreen
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -33,17 +34,7 @@ object RetrofitInstance {
     }
 }
 
-//suspend fun updateWeather(apiKey: String, city: String, weatherCurrent: MutableState<WeatherForecast?>) {
-//    try {
-//        val weatherResponse = RetrofitInstance.apiService.getListHoursWeather(apiKey, city)
-//        weatherCurrent.value = weatherResponse
-//    } catch (e: Exception) {
-//        // Обработка ошибок
-//        e.printStackTrace()
-//    }
-//}
-
-fun getWeatherSingle(city: String):Single<WeatherForecast>{
+fun getWeatherSingle(city: String):Single<WeatherScreen>{
     return RetrofitInstance.apiService
         .getListHoursWeather(API,city)
         .map { response ->
@@ -55,21 +46,8 @@ fun getWeatherSingle(city: String):Single<WeatherForecast>{
         }
 }
 
-fun updateWeatherSingle(city: String,forecastState: MutableState<WeatherForecast?>){
-    val disposable = getWeatherSingle(city)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(
-            { weatherForecast->
-                Log.d("MyLog","$weatherForecast")
-                forecastState.value = weatherForecast
-            },
-            {
-                Log.d("MyLog","Error $it")
-            }
-        )
 
-}
+
 
 
 

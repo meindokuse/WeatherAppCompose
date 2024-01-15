@@ -3,8 +3,10 @@
 
     <style name="Theme.YourWeather" parent="android:Theme.Material.Light.NoActionBar" >
         <!-- ... Другие настройки темы ... -->
-        <item name="android:windowNoTitle">true</item>
+<!--        <item name="android:windowNoTitle">true</item>-->
         <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@color/black</item>
+
     </style>
 
 
