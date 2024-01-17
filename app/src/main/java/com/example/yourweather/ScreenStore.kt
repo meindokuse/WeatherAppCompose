@@ -9,18 +9,19 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yourweather.database.ReposetoryHelper
+import com.example.yourweather.api.getWeatherSingle
+import com.example.yourweather.repos.LocalReposetoryHelper
 import com.example.yourweather.models.AppAction
 import com.example.yourweather.models.AppState
 import com.example.yourweather.models.OtherLocations
 import com.example.yourweather.models.WeatherForecast
 import com.example.yourweather.models.WeatherScreen
+import com.example.yourweather.repos.RemoteReposetoryHelper
 import com.google.android.gms.location.LocationServices
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,7 +29,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
+
+
+class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):ViewModel() {
     private val _appState = MutableStateFlow<AppState>(AppState.Idle)
     val appState: StateFlow<AppState> = _appState
     private var disposable: Disposable? = null
@@ -39,7 +42,6 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
             is AppState.Idle -> reduce(currentState,event,context)
             is AppState.SuccessInit ->reduce(currentState,event,context)
             is AppState.NoData->{ reduce(currentState,event,context) }
-
         }
     }
     private fun reduce(state: AppState.NoData,action: AppAction,context: Context){
@@ -69,8 +71,8 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
             AppAction.FirstEnter-> {
                 viewModelScope.launch(Dispatchers.IO) {
                     val locations:MutableList<String> = ArrayList()
-                    val initWeather = reposetoryHelper.getAllWeatherForecasts()
-                    locations.addAll(reposetoryHelper.getAllLocations())
+                    val initWeather = localReposetoryHelper.getAllWeatherForecasts()
+                    locations.addAll(localReposetoryHelper.getAllLocations())
                     Log.d("MyLog","$locations")
                     Log.d("MyLog","$initWeather")
                     withContext(Dispatchers.Main){
@@ -128,7 +130,6 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
                             location.longitude,
                             context
                         )
-                        getWeatherWithApi(state,newLocation)
                         Log.d("MyLog","NewLocation $newLocation")
                         _appState.value = state.copy(loading = false, location = newLocation)
                     }
@@ -136,13 +137,14 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
             }
             is AppAction.AddLocation->{
 
+                viewModelScope.launch(Dispatchers.IO) {
+                    localReposetoryHelper.addNewLocation( OtherLocations(location = action.newLocation))
+                }
                 val updatedLocations = state.otherLocations.toMutableList()
                 updatedLocations.add(action.newLocation)
                 _appState.value = state.copy(otherLocations = updatedLocations)
 
-                viewModelScope.launch(Dispatchers.IO) {
-                    reposetoryHelper.addNewLocation( OtherLocations(location = action.newLocation))
-                }
+
             }
             is AppAction.DeleteLocation ->{
 
@@ -151,7 +153,13 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
                 _appState.value = state.copy(otherLocations = updatedLocations)
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    reposetoryHelper.deleteLocation( OtherLocations(location = action.currentLocation))
+                    localReposetoryHelper.deleteLocation( action.currentLocation)
+                }
+            }
+            is AppAction.SwitchLocation ->{
+                _appState.value = state.copy(location = action.currentLocation)
+                viewModelScope.launch(Dispatchers.IO) {
+                    getWeatherWithApi(state,action.currentLocation)
                 }
             }
 
@@ -167,11 +175,10 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
 
         return if (addresses?.isNotEmpty()!!) {
                     Log.d("MyLog","Корректное получение локацмм $addresses")
-                    addresses[0].locality ?: "Belgorod"
-                } else {
+                     addresses[0].locality?: "Belgorod"
+                   } else {
                     "Belgorod"
-                }
-
+                 }
     }
 
     private fun requestLocationUpdates(context: Context, callback: (Location) -> Unit)  {
@@ -186,6 +193,7 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
         } else {
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
+                    Log.d("MyLog","$location")
                     location?.let {
                         Log.d("MyLog","Получили локацию $it")
                         callback.invoke(it)
@@ -200,11 +208,11 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
                 }
         }
     }
+
     private fun getWeatherWithApi(state: AppState, city: String) {
         disposable?.dispose()
-        disposable = getWeatherSingle(city)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        disposable = RemoteReposetoryHelper
+            .getWeatherWithSingle(city)
             .subscribe(
                 { weatherScreen ->
                     Log.d("MyLog", "$weatherScreen")
@@ -227,15 +235,12 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
                                 location = city
                             )
                             viewModelScope.launch(Dispatchers.IO) {
-                                runBlocking {
-
-                                }
                                 val weatherForecast = WeatherForecast(
                                     location = city,
                                     current = weatherScreen.current,
                                     forecast = weatherScreen.forecast
                                 )
-                                reposetoryHelper.insertWeatherForecast(weatherForecast)
+                                localReposetoryHelper.insertWeatherForecast(weatherForecast)
                             }
 
                         }
@@ -252,20 +257,32 @@ class ScreenStore(private val reposetoryHelper: ReposetoryHelper):ViewModel() {
                     disposable?.dispose()
                 }
             )
-
-
     }
     private fun updateStateIfSuccess(newState: AppState.SuccessInit){
         viewModelScope.launch(Dispatchers.IO) {
             val weatherForecast = WeatherForecast(
-                id = 0,
+                id = 1,
                 location = newState.location,
                 current = newState.weatherScreen.current,
                 forecast = newState.weatherScreen.forecast
             )
-            reposetoryHelper.updateWeatherForecast(weatherForecast)
+            localReposetoryHelper.updateWeatherForecast(weatherForecast)
         }
         Log.d("MyLog","updateStateIfSuccess $newState")
         _appState.value = newState
     }
+//    fun getAddressFromLocation(latitude: Double, longitude: Double): Address? {
+//        val geoApiContext = GeoApiContext.Builder()
+//            .apiKey("YOUR_API_KEY")
+//            .build()
+//
+//        val addresses = GeocodingApi.getFromLocation(
+//            geoApiContext,
+//            LatLng(latitude, longitude),
+//            1
+//        )
+//        return addresses.firstOrNull()?.address
+//    }
 }
+
+//const val api = "AIzaSyDPqmC2KBEIR6Asth1WkZ1Ty5KdEGoWjIA"

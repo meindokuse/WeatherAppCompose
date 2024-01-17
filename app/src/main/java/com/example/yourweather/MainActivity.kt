@@ -1,25 +1,19 @@
 package com.example.yourweather
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.window.SplashScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.yourweather.database.ReposetoryHelper
+import com.example.yourweather.repos.LocalReposetoryHelper
 import com.example.yourweather.models.AppAction
 import com.example.yourweather.models.AppState
 import com.example.yourweather.screens.DataLoadingScreen
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.runtime.collectAsState
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.example.yourweather.screens.successinit.SuccessInitScreen
 
 
@@ -28,11 +22,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val reposetoryHelper = ReposetoryHelper(applicationContext)
+        val localReposetoryHelper = LocalReposetoryHelper(applicationContext)
 
 
         setContent {
-            val screenStore:ScreenStore = viewModel(factory = ScreenStoreFactory(reposetoryHelper))
+            val screenStore:ScreenStore = viewModel(factory = ScreenStoreFactory(localReposetoryHelper))
             val status = screenStore.appState.collectAsState()
             val systemUiController: SystemUiController = rememberSystemUiController()
 
@@ -50,7 +44,14 @@ class MainActivity : ComponentActivity() {
                         updateAll = {screenStore.obtainEvent(AppAction.UpdateAll,applicationContext)},
                         onAddCity = { newLocation ->
                             screenStore.obtainEvent(AppAction.AddLocation(newLocation), applicationContext)
+                        },
+                        deleteLocation = {deletedLocation ->
+                            screenStore.obtainEvent(AppAction.DeleteLocation(deletedLocation),applicationContext)
+                        },
+                        switchLocation = {currentLocation ->
+                            screenStore.obtainEvent(AppAction.SwitchLocation(currentLocation),applicationContext)
                         }
+
                         )
                 }
                 is AppState.NoData->{

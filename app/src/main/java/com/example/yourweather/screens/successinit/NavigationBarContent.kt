@@ -43,14 +43,31 @@ import com.example.yourweather.models.AppState
 import com.example.yourweather.ui.theme.LightBlue
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Snackbar
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.example.yourweather.models.AppAction
+import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavigationContent(
     screenState: AppState.SuccessInit,
-    dialogState: MutableState<Boolean>
+    dialogState: MutableState<Boolean>,
+    deleteLocation: (String) -> Unit,
+    switchLocation: (String) -> Unit,
+    drawerState: DrawerState
 ){
+    val scope = rememberCoroutineScope()
     Column {
         Image(
             painter = painterResource(id = R.drawable.header),
@@ -106,7 +123,7 @@ fun NavigationContent(
         Spacer(Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -115,6 +132,7 @@ fun NavigationContent(
                 contentDescription = null,
                 tint = Color.White
             )
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = "Другие места",
                 style = TextStyle(color = Color.White, fontSize = 20.sp,),
@@ -129,22 +147,40 @@ fun NavigationContent(
         ) {
 
             itemsIndexed(screenState.otherLocations) { _, item ->
-                Box(
-                    contentAlignment = Alignment.Center,
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp)
                         .clickable {
-
+                            switchLocation(item)
+                            scope.launch {
+                                drawerState.close()
+                            }
                         },
                 ) {
-                    Text(
-                        text = item,
-                        style = TextStyle(color = Color.White, fontSize = 18.sp,),
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(painter = painterResource(id = R.drawable.ic_location_24), contentDescription = "city_loc" )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text(
+                            text = item,
+                            style = TextStyle(color = Color.White, fontSize = 18.sp,),
+                            modifier = Modifier
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(50.dp))
+                    IconButton(onClick = {
+                        deleteLocation(item)
+                    }) {
+                        Icon(painter = rememberVectorPainter(Icons.Default.Delete), contentDescription = "sync",
+                            tint = Color.White)
+                    }
                 }
             }
-
         }
         Spacer(Modifier.height(10.dp))
         ExtendedFloatingActionButton(
@@ -153,7 +189,10 @@ fun NavigationContent(
             onClick = {
                 dialogState.value = true
             },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            containerColor = Color.DarkGray,
+            contentColor = Color.White
+
         )
         var isSwitchOn by remember { mutableStateOf(false) }
         var voiceSupportState by remember { mutableStateOf(if (isSwitchOn) "вкл" else "выкл") }
@@ -183,7 +222,7 @@ fun NavigationContent(
                 }
             )
             Text(
-                text = "Голосвой помощник - $voiceSupportState",
+                text = "Голосовой помощник - $voiceSupportState",
                 style = TextStyle(color = Color.White, fontSize = 18.sp,),
             )
         }

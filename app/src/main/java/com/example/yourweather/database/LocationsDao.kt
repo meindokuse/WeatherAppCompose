@@ -13,8 +13,8 @@ interface LocationsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addNewLocation(otherLocations: OtherLocations)
 
-    @Delete(entity = OtherLocations::class)
-    suspend fun deleteLocation(vararg otherLocations: OtherLocations)
+    @Query("DELETE FROM other_locations WHERE location = :location")
+    suspend fun deleteLocation(location: String)
 
     @Query("SELECT * FROM other_locations")
     suspend fun getAllLocation ():List<OtherLocations>

@@ -63,9 +63,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("com.google.accompanist:accompanist-permissions:0.19.0")
 
-
-
-
+//    implementation("com.google.maps:google-maps-services:18.0.0")
 
     implementation ("com.google.android.gms:play-services-location:21.0.1")
 

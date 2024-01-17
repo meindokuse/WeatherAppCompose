@@ -13,11 +13,12 @@ import com.example.yourweather.models.WeatherForecast
 interface WeatherDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertWeatherForecast(vararg weatherForecast: WeatherForecast)
+    suspend fun insertWeatherForecast(weatherForecast: WeatherForecast)
 
     @Query("SELECT * FROM last_weather")
     suspend fun getWeatherForecasts():WeatherForecast?
 
     @Update(entity = WeatherForecast::class,onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateWeatherForecast(weatherForecast: WeatherForecast)
+
 }

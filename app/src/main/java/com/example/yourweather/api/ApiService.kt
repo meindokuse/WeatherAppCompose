@@ -1,4 +1,4 @@
-package com.example.yourweather
+package com.example.yourweather.api
 
 
 import com.example.yourweather.models.ForecastDay
@@ -19,5 +19,15 @@ interface ApiService {
         @Query("aqi") includeAqi: String = "no",
         @Query("alerts") alerts: String = "no"
     ):Single<Response<WeatherScreen>>
+
+    @GET("forecast.json")
+    fun getWeatherForecast(
+        @Query("key") apiKey: String,
+        @Query("q") location: String,
+        @Query("days") d:Int = 5,
+        @Query("aqi") includeAqi: String = "no",
+        @Query("alerts") alerts: String = "no"
+    ):Response<WeatherScreen>
+
 }
 

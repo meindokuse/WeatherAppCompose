@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
@@ -15,9 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.example.yourweather.models.AppAction
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 
@@ -61,7 +64,11 @@ fun AddCityDialog(
                         dialogState.value = false
                         onAddCity(cityName)
                     } else error = true
-                }
+                },
+                colors =  ButtonDefaults.buttonColors(
+                   containerColor = Color.DarkGray,
+                    contentColor = Color.White
+                )
             ) {
                 Text("Добавить")
             }
@@ -70,7 +77,11 @@ fun AddCityDialog(
             Button(
                 onClick = {
                     dialogState.value = false
-                }
+                },
+                colors =  ButtonDefaults.buttonColors(
+                    containerColor = Color.DarkGray,
+                    contentColor = Color.White
+                )
             ) {
                 Text("Отмена")
             }
@@ -112,3 +123,27 @@ fun DialogShouldShowRationale(
         }
     )
 }
+
+//@Composable
+//fun InfoDialog(
+//
+//    dialogState: MutableState<Boolean>,
+//    switchLocation:(String)->Unit,
+//    currentCity:String
+//){
+//    AlertDialog(
+//        title = {
+//            Text(text = "Смена локации" )
+//        },
+//        text = {
+//               Text(text = "При смене локации мы также и обновим данные о погоде")
+//        },
+//        onDismissRequest = {
+//             dialogState.value =false
+//        },
+//        confirmButton = {
+//            dialogState.value =false
+//            switchLocation(currentCity)
+//        },
+//    )
+//}

@@ -60,6 +60,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.yourweather.R
+import com.example.yourweather.models.AppAction
 import com.example.yourweather.models.AppState
 import com.example.yourweather.screens.dialogs.AddCityDialog
 import com.example.yourweather.screens.dialogs.DialogShouldShowRationale
@@ -77,7 +78,9 @@ fun SuccessInitScreen(
     updateWeather:()->Unit,
     updateLocation:()->Unit,
     updateAll:()->Unit,
-    onAddCity:(String)->Unit
+    onAddCity:(String)->Unit,
+    deleteLocation:(String) ->Unit,
+    switchLocation: (String)-> Unit
 ){
     val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
 
@@ -127,7 +130,13 @@ fun SuccessInitScreen(
                     .background(Color.Black)
                     .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
             ) {
-                NavigationContent(screenState = screenState, dialogState = dialogAddState)
+                NavigationContent(
+                    screenState = screenState,
+                    dialogState = dialogAddState,
+                    deleteLocation = deleteLocation,
+                    switchLocation = switchLocation,
+                    drawerState
+                    )
             }
         }) {
         LazyColumn(

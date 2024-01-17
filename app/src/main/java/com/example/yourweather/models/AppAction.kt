@@ -11,7 +11,9 @@ sealed class AppAction{
     data class DeleteLocation(
         val currentLocation:String
     ):AppAction()
-
+    data class SwitchLocation(
+        val currentLocation: String
+    ):AppAction()
 }
 
 

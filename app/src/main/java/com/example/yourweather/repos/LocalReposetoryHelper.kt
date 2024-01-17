@@ -1,11 +1,11 @@
-package com.example.yourweather.database
+package com.example.yourweather.repos
 
 import android.content.Context
-import com.example.yourweather.models.Forecast
+import com.example.yourweather.database.AppDatabase
 import com.example.yourweather.models.OtherLocations
 import com.example.yourweather.models.WeatherForecast
 
-class ReposetoryHelper(context: Context) {
+class LocalReposetoryHelper(context: Context) {
 
     private val weatherDao = AppDatabase.getInstance(context).weatherDao()
 
@@ -33,7 +33,7 @@ class ReposetoryHelper(context: Context) {
        return locations
     }
 
-    suspend fun deleteLocation(location: OtherLocations){
+    suspend fun deleteLocation(location: String){
         locationsDao.deleteLocation(location)
     }
 }
