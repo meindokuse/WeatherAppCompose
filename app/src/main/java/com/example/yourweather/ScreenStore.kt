@@ -9,23 +9,19 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yourweather.api.getWeatherSingle
 import com.example.yourweather.repos.LocalReposetoryHelper
 import com.example.yourweather.models.AppAction
 import com.example.yourweather.models.AppState
 import com.example.yourweather.models.OtherLocations
 import com.example.yourweather.models.WeatherForecast
 import com.example.yourweather.models.WeatherScreen
-import com.example.yourweather.repos.RemoteReposetoryHelper
+import com.example.yourweather.repos.RemoteReposеtoryHelper
 import com.google.android.gms.location.LocationServices
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
@@ -169,9 +165,11 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
     }
 
 
-    private fun getAddressFromLocationAsync(latitude: Double, longitude: Double,context: Context): String {
+    @Suppress("DEPRECATION")
+    private fun getAddressFromLocationAsync(latitude: Double, longitude: Double, context: Context): String {
         val geocoder = Geocoder(context, Locale.getDefault())
         val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+
 
         return if (addresses?.isNotEmpty()!!) {
                     Log.d("MyLog","Корректное получение локацмм $addresses")
@@ -211,27 +209,28 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
 
     private fun getWeatherWithApi(state: AppState, city: String) {
         disposable?.dispose()
-        disposable = RemoteReposetoryHelper
+        disposable = RemoteReposеtoryHelper
             .getWeatherWithSingle(city)
             .subscribe(
                 { weatherScreen ->
                     Log.d("MyLog", "$weatherScreen")
                     Log.d("MyLog", city)
 
-                    when(state){
-                        is AppState.SuccessInit->{
-                            Log.d("MyLog","Получили погоду")
+                    when (state) {
+                        is AppState.SuccessInit -> {
+                            Log.d("MyLog", "Получили погоду")
                             val newState = state.copy(
                                 loading = false,
-                                    weatherScreen =weatherScreen,
-                                    location = city)
+                                weatherScreen = weatherScreen,
+                                location = city
+                            )
                             updateStateIfSuccess(newState)
                         }
-                        is AppState.NoData->{
+                        is AppState.NoData -> {
                             _appState.value = AppState.SuccessInit(
                                 otherLocations = emptyList(),
                                 loading = false,
-                                weatherScreen =weatherScreen,
+                                weatherScreen = weatherScreen,
                                 location = city
                             )
                             viewModelScope.launch(Dispatchers.IO) {
@@ -242,15 +241,12 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                                 )
                                 localReposetoryHelper.insertWeatherForecast(weatherForecast)
                             }
-
                         }
-
                         else -> {
                             Log.d("MyLog", "Error with State")
                         }
                     }
                     disposable?.dispose()
-
                 },
                 {
                     Log.d("MyLog", "Error in Retrofit $it")
@@ -258,6 +254,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                 }
             )
     }
+
     private fun updateStateIfSuccess(newState: AppState.SuccessInit){
         viewModelScope.launch(Dispatchers.IO) {
             val weatherForecast = WeatherForecast(
@@ -283,6 +280,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
 //        )
 //        return addresses.firstOrNull()?.address
 //    }
+
 }
 
 //const val api = "AIzaSyDPqmC2KBEIR6Asth1WkZ1Ty5KdEGoWjIA"

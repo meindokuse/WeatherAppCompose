@@ -1,6 +1,13 @@
 package com.example.yourweather.screens.successinit
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.AnimationEndReason
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,14 +25,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DismissibleDrawerSheet
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.Divider
@@ -35,8 +46,11 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,9 +59,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -56,6 +73,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,6 +86,8 @@ import com.example.yourweather.ui.theme.CardBackgroundSecondV
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -120,6 +140,12 @@ fun SuccessInitScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    var scrollState = rememberLazyListState()
+    var titleAlpha by remember { mutableStateOf(1f) }
+    var boxAlpha by remember { mutableStateOf(0f) }
+    
+
+
     DismissibleNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = true,
@@ -139,70 +165,88 @@ fun SuccessInitScreen(
                     )
             }
         }) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                ) {
-                    // FOR OPEN DRAWER
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                Log.d("MyLog", "qwe")
-                                drawerState.apply {
-                                    if (isClosed) open() else close()
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Black,
+                        titleContentColor = Color.White,
+                    ),
+                    title = {
+                        Text(
+                            "",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    Log.d("MyLog", "qwe")
+                                    drawerState.apply {
+                                        if (isClosed) open() else close()
+                                    }
                                 }
-                            }
-                        },
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_density_small_24,),
+                                contentDescription = "",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .padding(start = 10.dp)
+                                    .size(50.dp)
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { updateLocation() },) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_share_location_24,),
+                                contentDescription = "",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .padding(end = 10.dp)
+                                    .size(50.dp)
+                            )
+                        }
+                    },
+                )
+            },
+
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+                    .background(Color.Black),
+            ) {
+                item {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_density_small_24,),
-                            contentDescription = "",
-                            tint = Color.White,
-                            modifier = Modifier
-                                .padding(start = 10.dp)
-                                .size(50.dp)
+                        Text(
+                            text = "Погода", style = TextStyle(
+                                fontSize = 40.sp, color = Color.White,
+                            ),
+                            modifier = Modifier.padding(60.dp)
                         )
                     }
-                    IconButton(onClick = { updateLocation() },) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_share_location_24,),
-                            contentDescription = "",
-                            tint = Color.White,
-                            modifier = Modifier
-                                .padding(end = 10.dp)
-                                .size(50.dp)
-                        )
-                    }
-                }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Погода", style = TextStyle(
-                            fontSize = 50.sp, color = Color.White,
-                        ),
-                        modifier = Modifier.padding(70.dp)
+
+                    MainScreen(
+                        data = screenState,
+                        updateWeather = updateWeather
                     )
                 }
-
-                MainScreen(
-                    data = screenState,
-                    updateWeather = updateWeather
-                )
             }
         }
     }
 }
+
+
 
 
 
