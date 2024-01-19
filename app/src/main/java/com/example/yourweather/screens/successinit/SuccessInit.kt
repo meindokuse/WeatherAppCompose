@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,13 +49,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,12 +74,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -88,6 +95,8 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -102,6 +111,7 @@ fun SuccessInitScreen(
     deleteLocation:(String) ->Unit,
     switchLocation: (String)-> Unit
 ){
+
     val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
 
     val dialogState = remember {
@@ -140,10 +150,29 @@ fun SuccessInitScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    var scrollState = rememberLazyListState()
-    var titleAlpha by remember { mutableStateOf(1f) }
-    var boxAlpha by remember { mutableStateOf(0f) }
-    
+    val scrollState = rememberLazyListState()
+   val current = LocalDensity.current
+
+    val titleAlpha = remember {
+        MutableStateFlow(0f)
+    }
+    val textAlpha = remember {
+        MutableStateFlow(1f)
+    }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(scrollState) {
+        while (true) {
+            val scrollOffset = scrollState.firstVisibleItemScrollOffset
+            val density = current.density
+            val pixelsToDp = with(current) { (200.dp.toPx() / density).dp }
+
+            titleAlpha.emit( scrollOffset / pixelsToDp.value)
+            textAlpha.emit( 1f - titleAlpha.value)
+
+            delay(16) // Задержка для уменьшения нагрузки на процессор
+        }
+    }
 
 
     DismissibleNavigationDrawer(
@@ -166,6 +195,9 @@ fun SuccessInitScreen(
             }
         }) {
         Scaffold(
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            },
             topBar = {
                 CenterAlignedTopAppBar(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -174,16 +206,20 @@ fun SuccessInitScreen(
                     ),
                     title = {
                         Text(
-                            "",
+                            "Погода",
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .graphicsLayer(alpha = titleAlpha.collectAsState().value, compositingStrategy = CompositingStrategy.ModulateAlpha )
                         )
+                        SideEffect {
+                            Log.d("MyLog","SideEffect")
+                        }
                     },
                     navigationIcon = {
                         IconButton(
                             onClick = {
                                 scope.launch {
-                                    Log.d("MyLog", "qwe")
                                     drawerState.apply {
                                         if (isClosed) open() else close()
                                     }
@@ -221,8 +257,11 @@ fun SuccessInitScreen(
                     .padding(it)
                     .fillMaxSize()
                     .background(Color.Black),
+                state = scrollState
+
             ) {
                 item {
+
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
@@ -232,10 +271,14 @@ fun SuccessInitScreen(
                             text = "Погода", style = TextStyle(
                                 fontSize = 40.sp, color = Color.White,
                             ),
-                            modifier = Modifier.padding(60.dp)
+                            modifier = Modifier
+                                .padding(60.dp)
+                                .graphicsLayer(
+                                    alpha = textAlpha.collectAsState().value,
+                                    compositingStrategy = CompositingStrategy.ModulateAlpha
+                                )
                         )
                     }
-
                     MainScreen(
                         data = screenState,
                         updateWeather = updateWeather
