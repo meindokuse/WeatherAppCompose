@@ -49,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -173,6 +174,24 @@ fun SuccessInitScreen(
             delay(16) // Задержка для уменьшения нагрузки на процессор
         }
     }
+    LaunchedEffect(key1 = screenState.error, block = {
+        when(screenState.error){
+            1->{
+                snackbarHostState.showSnackbar(
+                    message = "Проблемы с получением локации",
+                    actionLabel = "ОК",
+                    duration = SnackbarDuration.Long
+                )
+            }
+            2->{
+                snackbarHostState.showSnackbar(
+                    message = "Проблемы с получением данных о погоде",
+                    actionLabel = "ОК",
+                    duration = SnackbarDuration.Long
+                )
+            }
+        }
+    })
 
 
     DismissibleNavigationDrawer(
@@ -212,9 +231,6 @@ fun SuccessInitScreen(
                             modifier = Modifier
                                 .graphicsLayer(alpha = titleAlpha.collectAsState().value, compositingStrategy = CompositingStrategy.ModulateAlpha )
                         )
-                        SideEffect {
-                            Log.d("MyLog","SideEffect")
-                        }
                     },
                     navigationIcon = {
                         IconButton(

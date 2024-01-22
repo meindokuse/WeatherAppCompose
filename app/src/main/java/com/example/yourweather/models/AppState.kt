@@ -9,6 +9,7 @@ sealed class AppState{
         var success:Boolean
     ):AppState()
     data class SuccessInit(
+        val error:Int,
         val otherLocations: List<String>,
         val loading:Boolean,
         val weatherScreen: WeatherScreen,

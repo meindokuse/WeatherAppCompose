@@ -16,15 +16,19 @@ import com.example.yourweather.models.OtherLocations
 import com.example.yourweather.models.WeatherForecast
 import com.example.yourweather.models.WeatherScreen
 import com.example.yourweather.repos.RemoteReposеtoryHelper
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Locale
-
+import kotlin.coroutines.resume
 
 
 class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):ViewModel() {
@@ -46,17 +50,13 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                 Log.d("MyLog","reduce NoData")
                 _appState.value = state.copy(loading = true)
                 viewModelScope.launch(Dispatchers.IO) {
-                    requestLocationUpdates(context){ location->
-                       val newLocation = getAddressFromLocationAsync(
-                           location.latitude,
-                           location.longitude,
-                           context
-                       )
-                        getWeatherWithApi(state,newLocation)
-                    }
-                    withContext(Dispatchers.Main){
-                        _appState.value = state.copy(loading = false)
-                    }
+                    val location = requestLocationUpdateSuspend(context)
+                    val newAddress = getAddressFromLocationAsync(
+                        location.latitude,
+                        location.longitude,
+                        context
+                    )
+                    getWeatherWithApi(state,newAddress)
                 }
             }
             else -> {}
@@ -75,7 +75,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                         if (initWeather != null){
                             val weatherScreen = WeatherScreen(initWeather.current,initWeather.forecast)
                             Log.d("MyLog","SuccessInit in Idle , ${initWeather.location}")
-                            _appState.value = AppState.SuccessInit(locations,false, weatherScreen, initWeather.location)
+                            _appState.value = AppState.SuccessInit(0,locations,false, weatherScreen, initWeather.location)
                         } else{
                             Log.d("MyLog","NoData in Idle")
                             _appState.value = AppState.NoData(true,false,false,false)
@@ -97,64 +97,72 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                 viewModelScope.launch {
                     getWeatherWithApi(state,state.location)
                     withContext(Dispatchers.Main){
-                        _appState.value = state.copy(loading = false)
+                        _appState.emit(state.copy(loading = false))
                     }
                 }
             }
             AppAction.UpdateAll -> {
                 _appState.value = state.copy(loading = true)
                 viewModelScope.launch(Dispatchers.IO) {
-                    requestLocationUpdates(context){location->
-                        val newLocation = getAddressFromLocationAsync(
-                            location.latitude,
-                            location.longitude,
-                            context
-                        )
+                    val location = requestLocationUpdateSuspend(context)
+                    val newLocation = getAddressFromLocationAsync(location.latitude, location.longitude, context)
+                    if (newLocation == "Belgorod") {
+                        withContext(Dispatchers.Main) {
+                            _appState.emit(state.copy(error = 1))
+                        }
+                        launch { updateErrorState(state)}
+                        getWeatherWithApi(state.copy(error = 1),state.location)
+                    }else{
                         getWeatherWithApi(state,newLocation)
-                    }
-                    withContext(Dispatchers.Main){
-                        _appState.value = state.copy(loading = false)
                     }
                 }
             }
             AppAction.UpdateLocation ->{
                 _appState.value = state.copy(loading = true)
                 viewModelScope.launch(Dispatchers.IO) {
-                    requestLocationUpdates(context){location->
-                        val newLocation = getAddressFromLocationAsync(
-                            location.latitude,
-                            location.longitude,
-                            context
-                        )
-                        Log.d("MyLog","NewLocation $newLocation")
-                        _appState.value = state.copy(loading = false, location = newLocation)
+                    val location = async { requestLocationUpdateSuspend(context) }.await()
+                    val newLocation = getAddressFromLocationAsync(location.latitude,location.longitude,context)
+
+                    withContext(Dispatchers.Main){
+                        if (newLocation == "Belgorod"){
+                            _appState.emit(state.copy(error = 1))
+                            launch { updateErrorState(state)}
+                        } else{
+                            _appState.emit(state.copy(location = newLocation))
+                        }
                     }
                 }
             }
             is AppAction.AddLocation->{
-
                 viewModelScope.launch(Dispatchers.IO) {
+                    val updatedLocations = state.otherLocations.toMutableList()
+                    updatedLocations.add(action.newLocation)
                     localReposetoryHelper.addNewLocation( OtherLocations(location = action.newLocation))
+                    withContext(Dispatchers.Main){
+                        _appState.emit(state.copy(otherLocations = updatedLocations))
+                    }
                 }
-                val updatedLocations = state.otherLocations.toMutableList()
-                updatedLocations.add(action.newLocation)
-                _appState.value = state.copy(otherLocations = updatedLocations)
-
 
             }
             is AppAction.DeleteLocation ->{
 
                 val updatedLocations = state.otherLocations.toMutableList()
                 updatedLocations.remove(action.currentLocation)
-                _appState.value = state.copy(otherLocations = updatedLocations)
 
                 viewModelScope.launch(Dispatchers.IO) {
                     localReposetoryHelper.deleteLocation( action.currentLocation)
+
+                    withContext(Dispatchers.Main){
+                        _appState.emit(state.copy(otherLocations = updatedLocations))
+                    }
                 }
             }
+
             is AppAction.SwitchLocation ->{
-                _appState.value = state.copy(location = action.currentLocation)
                 viewModelScope.launch(Dispatchers.IO) {
+                    withContext(Dispatchers.Main){
+                        _appState.emit(state.copy(location = action.currentLocation))
+                    }
                     getWeatherWithApi(state,action.currentLocation)
                 }
             }
@@ -173,39 +181,76 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
 
         return if (addresses?.isNotEmpty()!!) {
                     Log.d("MyLog","Корректное получение локацмм $addresses")
+
                      addresses[0].locality?: "Belgorod"
                    } else {
                     "Belgorod"
                  }
     }
 
-    private fun requestLocationUpdates(context: Context, callback: (Location) -> Unit)  {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.d("MyLog", "нет разрешения")
-            callback.invoke(Location("Belgorod"))
-        } else {
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location ->
-                    Log.d("MyLog","$location")
-                    location?.let {
-                        Log.d("MyLog","Получили локацию $it")
-                        callback.invoke(it)
-                    } ?: run {
-                        Log.d("MyLog", "Локация не доступна")
-                        callback.invoke(Location("Belgorod"))
+//    private fun requestLocationUpdates(context: Context, callback: (Location) -> Unit)  {
+//        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+//        if (ActivityCompat.checkSelfPermission(
+//                context,
+//                Manifest.permission.ACCESS_FINE_LOCATION
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            Log.d("MyLog", "нет разрешения")
+//            callback.invoke(Location("Belgorod"))
+//        } else {
+//            fusedLocationClient.lastLocation
+//                .addOnSuccessListener { location ->
+//                    Log.d("MyLog","$location")
+//                    location?.let {
+//                        Log.d("MyLog","Получили локацию $it")
+//                        callback.invoke(it)
+//                    } ?: run {
+//                        Log.d("MyLog", "Локация не доступна")
+//                        callback.invoke(Location("Belgorod"))
+//                    }
+//                }
+//                .addOnFailureListener {
+//                    Log.e("MyLog", "Ошибка при получении локации: ${it.message}")
+//                    callback.invoke(Location("Belgorod"))
+//                }
+//        }
+//    }
+
+
+    private suspend fun requestLocationUpdateSuspend(context: Context): Location {
+        return suspendCancellableCoroutine { continuation ->
+            val fusedLocationClient: FusedLocationProviderClient =
+                LocationServices.getFusedLocationProviderClient(context)
+
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.d("MyLog", "нет разрешения")
+                continuation.resume(Location("Belgorod"))
+            } else {
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location ->
+                        Log.d("MyLog", "$location")
+                        location?.let {
+                            Log.d("MyLog", "Получили локацию $it")
+                            continuation.resume(Location(it))
+                        } ?: run {
+                            Log.d("MyLog", "Локация не доступна")
+                            continuation.resume(Location("Belgorod"))
+                        }
                     }
-                }
-                .addOnFailureListener {
-                    Log.e("MyLog", "Ошибка при получении локации: ${it.message}")
-                    callback.invoke(Location("Belgorod"))
-                }
+                    .addOnFailureListener {
+                        Log.e("MyLog", "Ошибка при получении локации: ${it.message}")
+                        continuation.resume(Location("Belgorod"))
+                    }
+            }
+
+            continuation.invokeOnCancellation {}
         }
     }
+
 
     private fun getWeatherWithApi(state: AppState, city: String) {
         disposable?.dispose()
@@ -228,6 +273,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                         }
                         is AppState.NoData -> {
                             _appState.value = AppState.SuccessInit(
+                                error = 0,
                                 otherLocations = emptyList(),
                                 loading = false,
                                 weatherScreen = weatherScreen,
@@ -251,6 +297,19 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                 {
                     Log.d("MyLog", "Error in Retrofit $it")
                     disposable?.dispose()
+                    viewModelScope.launch {
+                        when(state){
+                            is AppState.SuccessInit ->{
+                                _appState.emit(state.copy(error = 2))
+                                updateErrorState(state)
+                            }
+                            is AppState.NoData -> _appState.emit(state.copy(success = false))
+                            else -> {
+                                throw NoSuchMethodError("State Error")
+                            }
+                        }
+                    }
+
                 }
             )
     }
@@ -264,9 +323,16 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                 forecast = newState.weatherScreen.forecast
             )
             localReposetoryHelper.updateWeatherForecast(weatherForecast)
+            _appState.emit(newState)
         }
         Log.d("MyLog","updateStateIfSuccess $newState")
-        _appState.value = newState
+    }
+    private suspend fun updateErrorState(state: AppState.SuccessInit){
+        Log.d("MyLog","updateErrorState")
+        delay(5000)
+        _appState.emit(state.copy(error = 0))
+        Log.d("MyLog","updateErrorState - Post Delay")
+
     }
 //    fun getAddressFromLocation(latitude: Double, longitude: Double): Address? {
 //        val geoApiContext = GeoApiContext.Builder()

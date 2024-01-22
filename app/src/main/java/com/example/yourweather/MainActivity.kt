@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
             }
             when(status.value){
                 is AppState.SuccessInit-> {
-                    Log.d("MyLog","Вход в успешную")
                     SuccessInitScreen(
                         screenState = status.value as AppState.SuccessInit,
                         updateWeather = {screenStore.obtainEvent(AppAction.UpdateData, applicationContext)},

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Your Weather</string>
+    <string name="error_loc">Проблемы с получением локации</string>
+    <string name="error_weather">Проблемы с обновлением данных о погоде</string>
 </resources>
