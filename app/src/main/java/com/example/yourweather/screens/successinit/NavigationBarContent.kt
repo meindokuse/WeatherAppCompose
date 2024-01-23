@@ -1,5 +1,6 @@
 package com.example.yourweather.screens.successinit
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -147,6 +148,10 @@ fun NavigationContent(
         ) {
 
             itemsIndexed(screenState.otherLocations) { _, item ->
+                val visibility = remember {
+                    mutableStateOf(true)
+                }
+
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
@@ -174,6 +179,7 @@ fun NavigationContent(
                     }
                     Spacer(modifier = Modifier.width(50.dp))
                     IconButton(onClick = {
+
                         deleteLocation(item)
                     }) {
                         Icon(painter = rememberVectorPainter(Icons.Default.Delete), contentDescription = "sync",

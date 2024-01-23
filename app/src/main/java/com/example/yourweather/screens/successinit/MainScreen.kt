@@ -45,7 +45,7 @@ fun MainScreen(
     updateWeather:()->Unit,
 ) {
     val style = TextStyle(
-        fontSize = 15.sp,
+        fontSize = 18.sp,
         color = Color.White
     )
     val time = remember {
@@ -131,7 +131,7 @@ fun MainScreen(
                 ) {
                     Image(painter = painterResource(id = currentImageWeather.value), contentDescription = "img",
                         modifier = Modifier.size(64.dp))
-                    Text(text = data.weatherScreen.current.temp_c.toString(), style = TextStyle(
+                    Text(text = "${data.weatherScreen.current.temp_c}℃", style = TextStyle(
                         color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 50.sp),
                         modifier = Modifier.padding(start = 10.dp)
                     )
@@ -140,8 +140,9 @@ fun MainScreen(
                         verticalArrangement = Arrangement.SpaceAround
 
                     ){
+                        val today = data.weatherScreen.forecast.forecastday[0]
                         Text(text = "Ясно",style = style)
-                        Text(text = "-16/-22",style = style)
+                        Text(text = "${today.day.maxtemp_c.toInt()} / ${today.day.mintemp_c.toInt()}",style = style)
                     }
                 }
                 LazyRow(

@@ -49,6 +49,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -91,6 +93,7 @@ import com.example.yourweather.models.AppState
 import com.example.yourweather.screens.dialogs.AddCityDialog
 import com.example.yourweather.screens.dialogs.DialogShouldShowRationale
 import com.example.yourweather.ui.theme.CardBackgroundSecondV
+import com.example.yourweather.ui.theme.WhiteCream
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
@@ -209,13 +212,21 @@ fun SuccessInitScreen(
                     dialogState = dialogAddState,
                     deleteLocation = deleteLocation,
                     switchLocation = switchLocation,
-                    drawerState
+                    drawerState = drawerState
                     )
             }
         }) {
         Scaffold(
             snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
+                SnackbarHost(hostState = snackbarHostState,
+                    snackbar = {data->
+                        Snackbar(
+                            containerColor = WhiteCream,
+                            snackbarData = data,
+                            contentColor = Color.Black,
+                            actionColor = Color.Black
+                        )
+                    })
             },
             topBar = {
                 CenterAlignedTopAppBar(

@@ -76,7 +76,7 @@ fun DayWeather(
             modifier = Modifier
                 .weight(1f) // Занимает всю доступную ширину
         ) {
-            Text(text = "${minTemp.toInt()}/${maxTemp.toInt()}", style = style, modifier = Modifier.align(Alignment.CenterEnd))
+            Text(text = "${minTemp.toInt()} / ${maxTemp.toInt()}", style = style, modifier = Modifier.align(Alignment.CenterEnd))
         }
     }
 }

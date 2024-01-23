@@ -166,9 +166,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                     getWeatherWithApi(state,action.currentLocation)
                 }
             }
-
             else -> throw NotImplementedError("Error")
-
         }
     }
 
