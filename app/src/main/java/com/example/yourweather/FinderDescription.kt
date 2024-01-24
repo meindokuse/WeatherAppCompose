@@ -14,8 +14,9 @@ object FinderDescription {
             "rain" in desc -> "Дождь"
             "Clear" in desc -> "ясно"
             "overcast" in desc -> "Облачно"
+            "cloudy" in desc -> "Облачно"
             else -> {
-                "Ясно"
+                "Облачно"
             }
         }
     }
@@ -26,6 +27,7 @@ object FinderDescription {
             "rain" in desc -> R.drawable.rain
             "Clear" in desc -> R.drawable.sunny
             "overcast" in desc -> R.drawable.cloudy
+            "cloudy" in desc -> R.drawable.cloudy
             else -> {
                 R.drawable.cloudy
             }

@@ -27,7 +27,9 @@ data class Current(
     val last_updated_epoch: Long,
     val uv : Float,
     val gust_kph:Float,
-    val humidity:Int
+    val humidity:Int,
+    @Embedded
+    val condition: Condition
 
 )
 

@@ -167,6 +167,7 @@ fun NavigationContent(
                     exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth })
                                 + shrinkHorizontally() + fadeOut(),)
                 {
+
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,

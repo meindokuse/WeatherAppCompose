@@ -65,37 +65,13 @@ fun MainScreen(
     val desc = remember {
         mutableStateOf("Ясно")
     }
-    val code = data.weatherScreen.forecast.forecastday[0].day.condition.code
-    LaunchedEffect(key1 = code, block ={
-        icon.value = when(code){
-            1000-> R.drawable.sunny
-            in 1003..1006-> R.drawable.cloudy
-            1063->R.drawable.rain
-            in 1066..1069->R.drawable.snow
-            1258->R.drawable.snow
-            1087-> R.drawable.groza
-
-            else -> {
-                R.drawable.sunny
-            }
-        }
-        desc.value = when(code){
-            1000-> "Ясно"
-            in 1003..1006-> "Облачно"
-            1063->"Снег"
-            in 1066..1069->"Дождь"
-            1087-> "Гроза"
-            1258->"Снег"
-            1114->"Снег"
-            in 1210..1216->"Снег"
-
-            else -> {
-                "Ясно"
-            }
-        }
+    val text = data.weatherScreen.current.condition.text
+    LaunchedEffect(key1 = text, block ={
+        icon.value = FinderDescription.getFoto(text)
+        desc.value = FinderDescription.getDescription(text)
     } )
 
-    val descr = FinderDescription.getDescription(data.weatherScreen.forecast.forecastday[0].day.condition.text)
+    val descr = FinderDescription.getDescription(data.weatherScreen.current.condition.text)
     Log.d("MyLog","FinderDescription $descr")
     Column(
         modifier = Modifier

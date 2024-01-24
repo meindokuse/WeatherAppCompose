@@ -178,7 +178,7 @@ fun SuccessInitScreen(
                 textAlpha.emit(1f - titleAlpha.value)
             }
     }
-
+в
     LaunchedEffect(key1 = screenState.error, block = {
         when(screenState.error){
             1->{
