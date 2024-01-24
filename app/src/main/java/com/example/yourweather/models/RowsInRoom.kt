@@ -28,6 +28,7 @@ data class Current(
     val uv : Float,
     val gust_kph:Float,
     val humidity:Int
+
 )
 
 data class Forecast(

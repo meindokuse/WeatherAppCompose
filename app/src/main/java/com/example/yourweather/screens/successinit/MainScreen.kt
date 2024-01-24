@@ -1,6 +1,7 @@
 package com.example.yourweather.screens.successinit
 
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.yourweather.FinderDescription
 import com.example.yourweather.R
 import com.example.yourweather.ui.theme.CardBackgroundSecondV
 import java.text.SimpleDateFormat
@@ -51,14 +54,49 @@ fun MainScreen(
     val time = remember {
         mutableStateOf("")
     }
-    val currentImageWeather = remember {
-        mutableStateOf(R.drawable.sunny)
-    }
     val dateTime = remember {
         mutableStateOf(System.currentTimeMillis())
     }
     time.value = convertToDataSimple(dateTime.value)
 
+    val icon = remember {
+        mutableStateOf(R.drawable.sunny)
+    }
+    val desc = remember {
+        mutableStateOf("Ясно")
+    }
+    val code = data.weatherScreen.forecast.forecastday[0].day.condition.code
+    LaunchedEffect(key1 = code, block ={
+        icon.value = when(code){
+            1000-> R.drawable.sunny
+            in 1003..1006-> R.drawable.cloudy
+            1063->R.drawable.rain
+            in 1066..1069->R.drawable.snow
+            1258->R.drawable.snow
+            1087-> R.drawable.groza
+
+            else -> {
+                R.drawable.sunny
+            }
+        }
+        desc.value = when(code){
+            1000-> "Ясно"
+            in 1003..1006-> "Облачно"
+            1063->"Снег"
+            in 1066..1069->"Дождь"
+            1087-> "Гроза"
+            1258->"Снег"
+            1114->"Снег"
+            in 1210..1216->"Снег"
+
+            else -> {
+                "Ясно"
+            }
+        }
+    } )
+
+    val descr = FinderDescription.getDescription(data.weatherScreen.forecast.forecastday[0].day.condition.text)
+    Log.d("MyLog","FinderDescription $descr")
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -129,8 +167,10 @@ fun MainScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Image(painter = painterResource(id = currentImageWeather.value), contentDescription = "img",
+
+                    Image(painter = painterResource(id = icon.value), contentDescription = "img",
                         modifier = Modifier.size(64.dp))
+
                     Text(text = "${data.weatherScreen.current.temp_c}℃", style = TextStyle(
                         color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 50.sp),
                         modifier = Modifier.padding(start = 10.dp)
@@ -141,7 +181,7 @@ fun MainScreen(
 
                     ){
                         val today = data.weatherScreen.forecast.forecastday[0]
-                        Text(text = "Ясно",style = style)
+                        Text(text = desc.value,style = style)
                         Text(text = "${today.day.maxtemp_c.toInt()} / ${today.day.mintemp_c.toInt()}",style = style)
                     }
                 }

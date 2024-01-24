@@ -1,6 +1,15 @@
 package com.example.yourweather.screens.successinit
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +52,7 @@ import com.example.yourweather.R
 import com.example.yourweather.models.AppState
 import com.example.yourweather.ui.theme.LightBlue
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Delete
@@ -66,7 +76,8 @@ fun NavigationContent(
     dialogState: MutableState<Boolean>,
     deleteLocation: (String) -> Unit,
     switchLocation: (String) -> Unit,
-    drawerState: DrawerState
+    drawerState: DrawerState,
+    visibility:MutableState<Boolean>
 ){
     val scope = rememberCoroutineScope()
     Column {
@@ -148,43 +159,47 @@ fun NavigationContent(
         ) {
 
             itemsIndexed(screenState.otherLocations) { _, item ->
-                val visibility = remember {
-                    mutableStateOf(true)
-                }
+                AnimatedVisibility(
 
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                        .clickable {
-                            switchLocation(item)
-                            scope.launch {
-                                drawerState.close()
-                            }
-                        },
-                ) {
+                    visible = visibility.value,
+                    enter = slideInHorizontally() + expandHorizontally(expandFrom = Alignment.End)
+                            + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth })
+                                + shrinkHorizontally() + fadeOut(),)
+                {
                     Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Image(painter = painterResource(id = R.drawable.ic_location_24), contentDescription = "city_loc" )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(
-                            text = item,
-                            style = TextStyle(color = Color.White, fontSize = 18.sp,),
-                            modifier = Modifier
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(50.dp))
-                    IconButton(onClick = {
-
-                        deleteLocation(item)
-                    }) {
-                        Icon(painter = rememberVectorPainter(Icons.Default.Delete), contentDescription = "sync",
-                            tint = Color.White)
-                    }
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .clickable {
+                                switchLocation(item)
+                                scope.launch {
+                                    drawerState.close()
+                                }
+                            },
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Image(painter = painterResource(id = R.drawable.ic_location_24), contentDescription = "city_loc" )
+                                Spacer(modifier = Modifier.width(20.dp))
+                                Text(
+                                    text = item,
+                                    style = TextStyle(color = Color.White, fontSize = 18.sp,),
+                                    modifier = Modifier
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(50.dp))
+                            IconButton(onClick = {
+                                deleteLocation(item)
+                            }) {
+                                Icon(painter = rememberVectorPainter(Icons.Default.Delete), contentDescription = "sync",
+                                    tint = Color.White)
+                            }
+                        }
                 }
             }
         }

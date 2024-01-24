@@ -8,7 +8,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import retrofit2.HttpException
 
 object RemoteReposеtoryHelper {
-    private const val API = "7ea8a53b59324322a25220845240701"
+    private const val API = "4a3693035f3741978f8112822242101"
 
     fun getWeatherWithSingle(city: String): Single<WeatherScreen> {
         return RetrofitInstance.apiService.getWeatherForecast(API, city)

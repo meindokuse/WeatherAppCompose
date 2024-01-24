@@ -97,11 +97,13 @@ import com.example.yourweather.ui.theme.WhiteCream
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -152,6 +154,7 @@ fun SuccessInitScreen(
     }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
     val scope = rememberCoroutineScope()
 
     val scrollState = rememberLazyListState()
@@ -166,17 +169,16 @@ fun SuccessInitScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(scrollState) {
-        while (true) {
-            val scrollOffset = scrollState.firstVisibleItemScrollOffset
-            val density = current.density
-            val pixelsToDp = with(current) { (200.dp.toPx() / density).dp }
+        snapshotFlow { scrollState.firstVisibleItemScrollOffset }
+            .collect { scrollOffset ->
+                val density = current.density
+                val pixelsToDp = with(current) { (200.dp.toPx() / density).dp }
 
-            titleAlpha.emit( scrollOffset / pixelsToDp.value)
-            textAlpha.emit( 1f - titleAlpha.value)
-
-            delay(16) // Задержка для уменьшения нагрузки на процессор
-        }
+                titleAlpha.emit(scrollOffset / pixelsToDp.value)
+                textAlpha.emit(1f - titleAlpha.value)
+            }
     }
+
     LaunchedEffect(key1 = screenState.error, block = {
         when(screenState.error){
             1->{
@@ -195,6 +197,14 @@ fun SuccessInitScreen(
             }
         }
     })
+    val visibility = remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(key1 = drawerState.isOpen, block = {
+            visibility.value = drawerState.isOpen
+    })
+
 
 
     DismissibleNavigationDrawer(
@@ -207,12 +217,14 @@ fun SuccessInitScreen(
                     .background(Color.Black)
                     .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
             ) {
+
                 NavigationContent(
                     screenState = screenState,
                     dialogState = dialogAddState,
                     deleteLocation = deleteLocation,
                     switchLocation = switchLocation,
-                    drawerState = drawerState
+                    drawerState = drawerState,
+                    visibility = visibility
                     )
             }
         }) {
@@ -248,7 +260,14 @@ fun SuccessInitScreen(
                             onClick = {
                                 scope.launch {
                                     drawerState.apply {
-                                        if (isClosed) open() else close()
+                                        if (isClosed) {
+                                            visibility.value = true
+                                            open()
+                                        } else {
+                                            visibility.value = false
+
+                                            close()
+                                        }
                                     }
                                 }
                             },
