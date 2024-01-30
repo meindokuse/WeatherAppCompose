@@ -14,6 +14,8 @@ import com.example.yourweather.screens.DataLoadingScreen
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.runtime.collectAsState
+import com.example.yourweather.domain.ScreenStore
+import com.example.yourweather.domain.ScreenStoreFactory
 import com.example.yourweather.screens.successinit.SuccessInitScreen
 
 
@@ -26,7 +28,7 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
-            val screenStore:ScreenStore = viewModel(factory = ScreenStoreFactory(localReposetoryHelper))
+            val screenStore: ScreenStore = viewModel(factory = ScreenStoreFactory(localReposetoryHelper))
             val status = screenStore.appState.collectAsState()
             val systemUiController: SystemUiController = rememberSystemUiController()
 

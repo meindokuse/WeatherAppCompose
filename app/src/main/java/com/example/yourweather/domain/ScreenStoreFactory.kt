@@ -1,4 +1,4 @@
-package com.example.yourweather
+package com.example.yourweather.domain
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
