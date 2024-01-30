@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -83,7 +84,7 @@ fun DataLoadingScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = loadingState.value, style = TextStyle(fontSize = 22.sp, fontFamily = FontFamily.Monospace))
+        Text(text = loadingState.value, style = TextStyle(fontSize = 22.sp, fontFamily = FontFamily.Monospace, color = Color.White))
         if (state.noLocation) {
             loadingState.value="No location available. Please enable location services."
         } else if (state.noConnection) {
@@ -103,7 +104,7 @@ fun DataLoadingScreen(
             if (state.noConnection or state.noConnection){
                 updatingFun()
             } },
-            modifier = Modifier.background(Color.Gray)
+            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray, contentColor = Color.White)
         ) {
             Text("Retry", color = Color.White)
         }

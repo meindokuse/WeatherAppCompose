@@ -11,14 +11,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface ApiService {
-    @GET("forecast.json")
-    fun getListHoursWeather(
-        @Query("key") apiKey: String,
-        @Query("q") location: String,
-        @Query("days") d:Int = 5,
-        @Query("aqi") includeAqi: String = "no",
-        @Query("alerts") alerts: String = "no"
-    ): Single<WeatherScreen>
+
 
     @GET("forecast.json")
     fun getWeatherForecast(
@@ -28,15 +21,6 @@ interface ApiService {
         @Query("aqi") includeAqi: String = "no",
         @Query("alerts") alerts: String = "no"
     ):Single<Response<WeatherScreen>>
-
-    @GET("forecast.json")
-    suspend fun getWeatherForecastSuspend(
-        @Query("key") apiKey: String,
-        @Query("q") location: String,
-        @Query("days") d: Int = 5,
-        @Query("aqi") includeAqi: String = "no",
-        @Query("alerts") alerts: String = "no"
-    ): Response<WeatherScreen>
 
 }
 

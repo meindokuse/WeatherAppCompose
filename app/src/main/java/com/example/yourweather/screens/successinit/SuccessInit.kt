@@ -1,6 +1,7 @@
 package com.example.yourweather.screens.successinit
 
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,8 +56,10 @@ import com.example.yourweather.ui.theme.CardBackgroundSecondV
 import com.example.yourweather.ui.theme.WhiteCream
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -110,7 +114,9 @@ fun SuccessInitScreen(
     val scope = rememberCoroutineScope()
 
     val scrollState = rememberLazyListState()
-    val scrollStateEx = rememberScrollState()
+
+
+
    val current = LocalDensity.current
 
     val titleAlpha = remember {
@@ -122,15 +128,22 @@ fun SuccessInitScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(scrollState) {
-        snapshotFlow { scrollState.firstVisibleItemScrollOffset }
-            .collect { scrollOffset ->
-                val density = current.density
-                val pixelsToDp = with(current) { (200.dp.toPx() / density).dp }
 
-                titleAlpha.value = scrollOffset / pixelsToDp.value
-                textAlpha.value = 1f - titleAlpha.value
-            }
+        withContext(Dispatchers.Default){
+            snapshotFlow { scrollState.firstVisibleItemScrollOffset }
+                .collect { scrollOffset ->
+                    val density = current.density
+                    val pixelsToDp = with(current) { (200.dp.toPx() / density).dp }
+                    Log.d("MyLog","snapshotFlow")
+
+                    withContext(Dispatchers.Main){
+                        titleAlpha.emit(scrollOffset / pixelsToDp.value)
+                        textAlpha.emit( 1f - titleAlpha.value)
+                    }
+                }
+        }
     }
+
 
     LaunchedEffect(key1 = screenState.error, block = {
         when(screenState.error){
@@ -207,6 +220,9 @@ fun SuccessInitScreen(
                             modifier = Modifier
                                 .graphicsLayer(alpha = titleAlpha.collectAsState().value, compositingStrategy = CompositingStrategy.ModulateAlpha )
                         )
+                        SideEffect {
+                            Log.d("MyLog","SideEffect")
+                        }
                     },
                     navigationIcon = {
                         IconButton(
@@ -288,6 +304,8 @@ fun SuccessInitScreen(
         }
     }
 }
+
+
 
 
 

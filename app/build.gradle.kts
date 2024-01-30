@@ -10,6 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.yourweather"
+        targetSdk = 33
         minSdk = 26
         versionCode = 1
         versionName = "1.0"
@@ -63,7 +64,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("com.google.accompanist:accompanist-permissions:0.19.0")
 
-    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    implementation ("com.google.android.gms:play-services-location:21.1.0")
 
 
     implementation("io.coil-kt:coil-compose:2.0.0-rc01")

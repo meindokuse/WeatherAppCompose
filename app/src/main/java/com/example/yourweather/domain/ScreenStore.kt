@@ -120,7 +120,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
             AppAction.UpdateLocation ->{
                 _appState.value = state.copy(loading = true)
                 viewModelScope.launch(Dispatchers.IO) {
-                    val location = async { requestLocationUpdateSuspend(context) }.await()
+                    val location =  requestLocationUpdateSuspend(context)
                     val newLocation = getAddressFromLocationAsync(location.latitude,location.longitude,context)
 
                     withContext(Dispatchers.Main){
@@ -129,6 +129,7 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                             launch { updateErrorState(state)}
                         } else{
                             _appState.emit(state.copy(location = newLocation))
+                            getWeatherWithApi(state,newLocation)
                         }
                     }
                 }
@@ -185,35 +186,6 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
                     "Belgorod"
                  }
     }
-
-//    private fun requestLocationUpdates(context: Context, callback: (Location) -> Unit)  {
-//        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-//        if (ActivityCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            Log.d("MyLog", "нет разрешения")
-//            callback.invoke(Location("Belgorod"))
-//        } else {
-//            fusedLocationClient.lastLocation
-//                .addOnSuccessListener { location ->
-//                    Log.d("MyLog","$location")
-//                    location?.let {
-//                        Log.d("MyLog","Получили локацию $it")
-//                        callback.invoke(it)
-//                    } ?: run {
-//                        Log.d("MyLog", "Локация не доступна")
-//                        callback.invoke(Location("Belgorod"))
-//                    }
-//                }
-//                .addOnFailureListener {
-//                    Log.e("MyLog", "Ошибка при получении локации: ${it.message}")
-//                    callback.invoke(Location("Belgorod"))
-//                }
-//        }
-//    }
-
 
     private suspend fun requestLocationUpdateSuspend(context: Context): Location {
         return suspendCancellableCoroutine { continuation ->

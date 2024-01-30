@@ -236,7 +236,7 @@ fun MainScreen(
 
 private fun convertToData(time: Long): String {
     val instant = Instant.ofEpochSecond(time)
-    val zoneId = ZoneId.of("Europe/Moscow") // Выберите нужный часовой пояс
+    val zoneId = ZoneId.of("Europe/Moscow")
     val formatter = DateTimeFormatter.ofPattern("HH:mm").withLocale(Locale("ru"))
     return formatter.format(instant.atZone(zoneId))
 }
@@ -246,7 +246,7 @@ private fun convertToDataSimple(time:Long):String{
 }
 private fun convertToWeekDay(time: Long): String {
     val instant = Instant.ofEpochSecond(time)
-    val zoneId = ZoneId.of("Europe/Moscow") // Выберите нужный часовой пояс
+    val zoneId = ZoneId.of("Europe/Moscow")
     val formatter = DateTimeFormatter.ofPattern("EEEE").withLocale(Locale("ru"))
     return formatter.format(instant.atZone(zoneId))
 }
