@@ -1,4 +1,4 @@
-This simple Weather App
+It simple Weather App
 
 I used:
 
