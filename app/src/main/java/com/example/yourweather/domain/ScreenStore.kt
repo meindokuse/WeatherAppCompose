@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okio.IOException
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -173,17 +174,19 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
 
     @Suppress("DEPRECATION")
     private fun getAddressFromLocationAsync(latitude: Double, longitude: Double, context: Context): String {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+        try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
 
-
-        return if (addresses?.isNotEmpty()!!) {
-                    Log.d("MyLog","Корректное получение локацмм $addresses")
-
-                     addresses[0].locality?: "Belgorod"
-                   } else {
-                    "Belgorod"
-                 }
+            return if (addresses?.isNotEmpty() == true) {
+                addresses[0].locality ?: "Belgorod"
+            } else {
+                "Belgorod"
+            }
+        } catch (e: IOException) {
+            Log.e("MyLog", "IOException при получении адреса: ${e.message}")
+            return "Belgorod"
+        }
     }
 
     private suspend fun requestLocationUpdateSuspend(context: Context): Location {

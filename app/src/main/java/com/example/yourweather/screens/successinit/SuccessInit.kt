@@ -2,6 +2,7 @@ package com.example.yourweather.screens.successinit
 
 
 import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,12 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -66,13 +69,13 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SuccessInitScreen(
     screenState: AppState.SuccessInit,
-    updateWeather:()->Unit,
-    updateLocation:()->Unit,
-    updateAll:()->Unit,
-    onAddCity:(String)->Unit,
-    deleteLocation:(String) ->Unit,
-    switchLocation: (String)-> Unit
-){
+    updateWeather: () -> Unit,
+    updateLocation: () -> Unit,
+    updateAll: () -> Unit,
+    onAddCity: (String) -> Unit,
+    deleteLocation: (String) -> Unit,
+    switchLocation: (String) -> Unit
+) {
 
     val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
 
@@ -82,13 +85,13 @@ fun SuccessInitScreen(
     val dialogAddState = remember {
         mutableStateOf(false)
     }
-    if (dialogState.value){
+    if (dialogState.value) {
         DialogShouldShowRationale(
             permissionState = permissionState,
             dialogState = dialogState
         )
     }
-    if (dialogAddState.value){
+    if (dialogAddState.value) {
         AddCityDialog(
             onAddCity = onAddCity,
             dialogState = dialogAddState
@@ -100,9 +103,11 @@ fun SuccessInitScreen(
             permissionState.hasPermission -> {
                 updateAll()
             }
+
             permissionState.shouldShowRationale -> {
                 dialogState.value = true
             }
+
             else -> {
                 permissionState.launchPermissionRequest()
             }
@@ -113,32 +118,28 @@ fun SuccessInitScreen(
 
     val scope = rememberCoroutineScope()
 
+
+    val current = LocalDensity.current
+
     val scrollState = rememberLazyListState()
-
-
-
-   val current = LocalDensity.current
 
     val titleAlpha = remember {
         MutableStateFlow(0f)
     }
-    val textAlpha = remember {
-        MutableStateFlow(1f)
-    }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(scrollState) {
 
-        withContext(Dispatchers.Default){
+        withContext(Dispatchers.Default) {
             snapshotFlow { scrollState.firstVisibleItemScrollOffset }
                 .collect { scrollOffset ->
                     val density = current.density
                     val pixelsToDp = with(current) { (200.dp.toPx() / density).dp }
-                    Log.d("MyLog","snapshotFlow")
+                    Log.d("MyLog", "snapshotFlow")
 
-                    withContext(Dispatchers.Main){
+                    withContext(Dispatchers.Main) {
                         titleAlpha.emit(scrollOffset / pixelsToDp.value)
-                        textAlpha.emit( 1f - titleAlpha.value)
                     }
                 }
         }
@@ -146,15 +147,16 @@ fun SuccessInitScreen(
 
 
     LaunchedEffect(key1 = screenState.error, block = {
-        when(screenState.error){
-            1->{
+        when (screenState.error) {
+            1 -> {
                 snackbarHostState.showSnackbar(
                     message = "Проблемы с получением локации",
                     actionLabel = "ОК",
                     duration = SnackbarDuration.Long
                 )
             }
-            2->{
+
+            2 -> {
                 snackbarHostState.showSnackbar(
                     message = "Проблемы с получением данных о погоде",
                     actionLabel = "ОК",
@@ -168,7 +170,7 @@ fun SuccessInitScreen(
     }
 
     LaunchedEffect(key1 = drawerState.isOpen, block = {
-            visibility.value = drawerState.isOpen
+        visibility.value = drawerState.isOpen
     })
 
 
@@ -191,13 +193,13 @@ fun SuccessInitScreen(
                     switchLocation = switchLocation,
                     drawerState = drawerState,
                     visibility = visibility
-                    )
+                )
             }
         }) {
         Scaffold(
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState,
-                    snackbar = {data->
+                    snackbar = { data ->
                         Snackbar(
                             containerColor = WhiteCream,
                             snackbarData = data,
@@ -218,10 +220,13 @@ fun SuccessInitScreen(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier
-                                .graphicsLayer(alpha = titleAlpha.collectAsState().value, compositingStrategy = CompositingStrategy.ModulateAlpha )
+                                .graphicsLayer(
+                                    compositingStrategy = CompositingStrategy.ModulateAlpha,
+                                    alpha = titleAlpha.collectAsState().value
+                                )
                         )
                         SideEffect {
-                            Log.d("MyLog","SideEffect")
+                            Log.d("MyLog", "SideEffect")
                         }
                     },
                     navigationIcon = {
@@ -242,7 +247,7 @@ fun SuccessInitScreen(
                             },
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.baseline_density_small_24,),
+                                painter = painterResource(id = R.drawable.baseline_density_small_24),
                                 contentDescription = "",
                                 tint = Color.White,
                                 modifier = Modifier
@@ -252,9 +257,9 @@ fun SuccessInitScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { updateLocation() },) {
+                        IconButton(onClick = { updateLocation() }) {
                             Icon(
-                                painter = painterResource(id = R.drawable.baseline_share_location_24,),
+                                painter = painterResource(id = R.drawable.baseline_share_location_24),
                                 contentDescription = "",
                                 tint = Color.White,
                                 modifier = Modifier
@@ -266,7 +271,7 @@ fun SuccessInitScreen(
                 )
             },
 
-        ) {
+            ) {
             LazyColumn(
                 modifier = Modifier
                     .padding(it)
@@ -275,7 +280,7 @@ fun SuccessInitScreen(
 
                 state = scrollState,
 
-            ) {
+                ) {
                 item {
 
                     Box(
@@ -289,10 +294,6 @@ fun SuccessInitScreen(
                             ),
                             modifier = Modifier
                                 .padding(60.dp)
-                                .graphicsLayer(
-                                    alpha = textAlpha.collectAsState().value,
-                                    compositingStrategy = CompositingStrategy.ModulateAlpha
-                                )
                         )
                     }
                     MainScreen(
