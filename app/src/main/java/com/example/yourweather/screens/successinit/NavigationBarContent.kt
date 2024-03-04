@@ -216,38 +216,6 @@ fun NavigationContent(
             contentColor = Color.White
 
         )
-        var isSwitchOn by remember { mutableStateOf(false) }
-        var voiceSupportState by remember { mutableStateOf(if (isSwitchOn) "вкл" else "выкл") }
-
-        LaunchedEffect(isSwitchOn) {
-            voiceSupportState = if (isSwitchOn) "вкл" else "выкл"
-        }
-
-        Divider(
-            color = Color.DarkGray,
-            modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 10.dp)
-        )
-        Spacer(Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Switch(
-                modifier = Modifier
-                    .width(100.dp)
-                    .fillMaxWidth(),
-                checked = isSwitchOn,
-                onCheckedChange = { isChecked ->
-                    isSwitchOn = isChecked
-                }
-            )
-            Text(
-                text = "Голосовой помощник - $voiceSupportState",
-                style = TextStyle(color = Color.White, fontSize = 18.sp,),
-            )
-        }
     }
 }
 

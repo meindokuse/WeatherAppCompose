@@ -306,19 +306,6 @@ class ScreenStore(private val localReposetoryHelper: LocalReposetoryHelper):View
         Log.d("MyLog","updateErrorState - Post Delay")
 
     }
-//    fun getAddressFromLocation(latitude: Double, longitude: Double): Address? {
-//        val geoApiContext = GeoApiContext.Builder()
-//            .apiKey("YOUR_API_KEY")
-//            .build()
-//
-//        val addresses = GeocodingApi.getFromLocation(
-//            geoApiContext,
-//            LatLng(latitude, longitude),
-//            1
-//        )
-//        return addresses.firstOrNull()?.address
-//    }
 
 }
 
-//const val api = "AIzaSyDPqmC2KBEIR6Asth1WkZ1Ty5KdEGoWjIA"
